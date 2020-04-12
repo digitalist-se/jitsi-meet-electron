@@ -3,21 +3,21 @@
   "version": "2.0.0",
   "description": "Electron application for Jitsi Meet",
   "main": "./build/main.js",
-  "productName": "Jitsi Meet",
+  "productName": "Digi Meet",
   "scripts": {
     "start": "webpack --config ./webpack.main.js --mode development && concurrently \"npm:watch\" \"electron ./build/main.js\"",
     "clean": "rm -rf node_modules build dist",
     "lint": "eslint . && flow",
     "build": "webpack --config ./webpack.main.js --mode production && webpack --config ./webpack.renderer.js --mode production",
-    "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder",
+    "pack": "yarn build && electron-builder --dir",
+    "dist": "yarn build && electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "validate": "npm ls",
     "watch": "webpack --config ./webpack.renderer.js --mode development --watch --watch-poll"
   },
   "build": {
-    "appId": "org.jitsi.jitsi-meet",
-    "productName": "Jitsi Meet",
+    "appId": "se.digitalist.jitsi",
+    "productName": "Digi Meet",
     "generateUpdatesFilesForAllChannels": true,
     "files": [
       "**/*",
@@ -26,14 +26,20 @@
       "!main.js"
     ],
     "mac": {
-      "artifactName": "jitsi-meet.${ext}",
+      "artifactName": "digi-meet.${ext}",
       "category": "public.app-category.video",
-      "darkModeSupport": true
+      "darkModeSupport": true,
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "type": "distribution", 
+      "entitlements": "entitlements.plist",
+      "entitlementsInherit": "entitlements.plist"
     },
+    "afterSign": "notarize.js",
     "linux": {
       "artifactName": "jitsi-meet-${arch}.${ext}",
       "category": "VideoConference;AudioVideo;Audio;Video;Network",
-      "description": "Jitsi Meet Desktop App",
+      "description": "Digi Meet Desktop App",
       "executableName": "jitsi-meet",
       "target": [
         {
@@ -63,7 +69,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/jitsi/jitsi-meet-electron"
+    "url": "git://github.com/digitalist-se/jitsi-meet-electron"
   },
   "keywords": [
     "jingle",
@@ -127,6 +133,7 @@
     "devtron": "1.4.0",
     "electron": "8.2.1",
     "electron-builder": "22.3.6",
+    "electron-notarize": "^0.3.0",
     "electron-react-devtools": "0.5.3",
     "eslint": "6.5.1",
     "eslint-config-jitsi": "github:jitsi/eslint-config-jitsi#1.0.2",
