@@ -8,7 +8,7 @@ import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
 
 import config from '../../config';
-import { setEmail, setName } from '../../settings';
+import { getSetting, setEmail, setName } from '../../settings';
 
 import { conferenceEnded, conferenceJoined } from '../actions';
 import { LoadingIndicator, Wrapper } from '../styled';
@@ -25,6 +25,11 @@ type Props = {
      * React Router location object.
      */
     location: Object;
+
+    /**
+     * AlwaysOnTop Window Enabled.
+     */
+    _alwaysOnTopWindowEnabled: boolean;
 
     /**
      * Avatar URL.
@@ -236,19 +241,27 @@ class Conference extends Component<Props, State> {
      */
     _onScriptLoad(parentNode: Object) {
         const JitsiMeetExternalAPI = window.JitsiMeetExternalAPI;
-
+        const url = new URL(this._conference.room, this._conference.serverURL);
+        const roomName = url.pathname.split('/').pop();
         const host = this._conference.serverURL.replace(/https?:\/\//, '');
+        const searchParameters = Object.fromEntries(url.searchParams);
+        const urlParameters = Object.keys(searchParameters).length ? searchParameters : {};
 
         const configOverwrite = {
             startWithAudioMuted: this.props._startWithAudioMuted,
             startWithVideoMuted: this.props._startWithVideoMuted
         };
 
-        this._api = new JitsiMeetExternalAPI(host, {
+        const options = {
             configOverwrite,
             onload: this._onIframeLoad,
             parentNode,
-            roomName: this._conference.room
+            roomName
+        };
+
+        this._api = new JitsiMeetExternalAPI(host, {
+            ...options,
+            ...urlParameters
         });
 
         const { RemoteControl,
@@ -265,7 +278,12 @@ class Conference extends Component<Props, State> {
 
         setupScreenSharingRender(this._api);
         new RemoteControl(iframe); // eslint-disable-line no-new
-        setupAlwaysOnTopRender(this._api);
+
+        // Allow window to be on top if enabled in settings
+        if (this.props._alwaysOnTopWindowEnabled) {
+            setupAlwaysOnTopRender(this._api);
+        }
+
         setupWiFiStats(iframe);
         setupPowerMonitorRender(this._api);
 
@@ -393,17 +411,12 @@ class Conference extends Component<Props, State> {
  * Maps (parts of) the redux state to the React props.
  *
  * @param {Object} state - The redux state.
- * @returns {{
- *     _avatarURL: string,
- *     _email: string,
- *     _name: string,
- *     _serverURL: string,
- *     _startWithAudioMuted: boolean,
- *     _startWithVideoMuted: boolean
- * }}
+ * @returns {Props}
  */
 function _mapStateToProps(state: Object) {
     return {
+        _alwaysOnTopWindowEnabled:
+            getSetting(state, 'alwaysOnTopWindowEnabled', true),
         _avatarURL: state.settings.avatarURL,
         _email: state.settings.email,
         _name: state.settings.name,
