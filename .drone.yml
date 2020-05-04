@@ -1,0 +1,83 @@
+---
+kind: pipeline
+type: exec
+name: Digi Meet Mac OS
+
+platform:
+  os: darwin
+  arch: amd64
+
+
+trigger:
+  branch:
+  - digitalist-se
+  event:
+  - push
+  
+steps:
+
+- name: Setup node
+  commands:
+    - n $(cat .nvmrc)
+    - npm install -g yarn
+
+- name: Build MacOS
+  commands:
+    - bundle exec fastlane android development
+  environment:
+    FASTLANE_PASSWORD:
+      from_secret: apple_user_password
+    MATCH_PASSWORD:
+      from_secret: apple_cert_password
+    GITHUB_API_TOKEN:
+      from_secret: github_api_token
+    SLACK_URL:
+      from_secret: slack_url
+    FL_SLACK_CHANNEL:
+      from_secret: slack_channel
+    DRONE_BOT_TOKEN:
+      from_secret: drone_bot_token
+  when:
+    branch:
+    - develop
+
+- name: iOS development build
+  commands:
+    - bundle exec fastlane ios development
+  environment:
+    FASTLANE_PASSWORD:
+      from_secret: apple_user_password
+    MATCH_PASSWORD:
+      from_secret: apple_cert_password
+    GITHUB_API_TOKEN:
+      from_secret: github_api_token
+    SLACK_URL:
+      from_secret: slack_url
+    FL_SLACK_CHANNEL:
+      from_secret: slack_channel
+    DRONE_BOT_TOKEN:
+      from_secret: drone_bot_token
+  when:
+    branch:
+    - develop
+
+- name: iOS beta release
+  commands:
+    - bundle exec fastlane ios beta
+  environment:
+    FASTLANE_PASSWORD:
+      from_secret: apple_user_password
+    MATCH_PASSWORD:
+      from_secret: apple_cert_password
+    GITHUB_API_TOKEN:
+      from_secret: github_api_token
+    SLACK_URL:
+      from_secret: slack_url
+    FL_SLACK_CHANNEL:
+      from_secret: slack_channel
+    DRONE_BOT_TOKEN:
+      from_secret: drone_bot_token
+  when:
+    branch:
+    - master
+    

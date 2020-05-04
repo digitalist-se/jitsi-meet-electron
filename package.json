@@ -1,7 +1,7 @@
 {
-  "name": "jitsi-meet-electron",
+  "name": "digi-meet-electron",
   "version": "2.0.2",
-  "description": "Electron application for Jitsi Meet",
+  "description": "Electron application for Digi Meet",
   "main": "./build/main.js",
   "productName": "Digi Meet",
   "scripts": {
@@ -40,19 +40,27 @@
     },
     "afterSign": "notarize.js",
     "linux": {
-      "artifactName": "jitsi-meet-${arch}.${ext}",
+      "artifactName": "digi-meet-${arch}.${ext}",
       "category": "VideoConference;AudioVideo;Audio;Video;Network",
       "description": "Digi Meet Desktop App",
-      "executableName": "jitsi-meet",
+      "executableName": "digi-meet",
       "target": [
         {
           "arch": "x64",
           "target": "AppImage"
-        }
+        },
+	    {
+	     "arch": "x64",
+	    "target": "deb"
+	    },
+	    {
+		    "arch": "x64",
+		    "target": "pacman"
+	    }
       ]
     },
     "win": {
-      "artifactName": "jitsi-meet.${ext}",
+      "artifactName": "digi-meet.${ext}",
       "target": [
         {
           "arch": [

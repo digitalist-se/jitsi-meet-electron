@@ -37,6 +37,10 @@ exports.default = async function notarizing(context) {
         throw new Error(`Not notarizing ${appName}: APPLE_ID_PASSWORD environment variable not set`);
     }
 
+    if (!process.env.APPLE_ID_TEAM_ID) {
+        throw new Error(`Not notarizing ${appName}: APPLE_ID_TEAM_ID environment variable not set`);
+    }
+
 
     if (!fs.existsSync(appPath)) {
         throw new Error(`Cannot find application at: ${appPath}`);
@@ -45,6 +49,7 @@ exports.default = async function notarizing(context) {
     return await notarize({
         appBundleId,
         appPath,
+        ascProvider: process.env.APPLE_ID_TEAM_ID,
         appleId: process.env.APPLE_ID,
         appleIdPassword: process.env.APPLE_ID_PASSWORD
     });
