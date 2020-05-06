@@ -37,6 +37,7 @@
       "extendInfo": {
         "NSCameraUsageDescription": "Digi Meet requires access to your camera in order to make video-calls.",
         "NSMicrophoneUsageDescription": "Digi Meet requires access to your microphone in order to make calls (audio/video)."
+      }
     },
     "afterSign": "notarize.js",
     "linux": {
@@ -162,5 +163,4 @@
     "webpack": "4.42.1",
     "webpack-cli": "3.3.11"
   }
-}
 }
