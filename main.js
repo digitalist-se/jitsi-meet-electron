@@ -23,6 +23,13 @@ const config = require('./app/features/config');
 // We need this because of https://github.com/electron/electron/issues/18214
 app.commandLine.appendSwitch('disable-site-isolation-trials');
 
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1086373
+app.commandLine.appendSwitch('disable-webrtc-hw-encoding');
+app.commandLine.appendSwitch('disable-webrtc-hw-decoding');
+
+// Needed until robot.js is fixed: https://github.com/octalmage/robotjs/issues/580
+app.allowRendererProcessReuse = false;
+
 autoUpdater.logger = require('electron-log');
 autoUpdater.logger.transports.file.level = 'info';
 
@@ -153,6 +160,7 @@ function createJitsiMeetWindow() {
         minHeight: 600,
         show: false,
         webPreferences: {
+            experimentalFeatures: true, // Insertable streams, for E2EE.
             nativeWindowOpen: true,
             nodeIntegration: false,
             preload: path.resolve(basePath, './build/preload.js')

@@ -21,6 +21,11 @@ export default {
     defaultServerURL: 'https://meet.dglive.net',
 
     /**
+     * The default server Timeout in seconds.
+     */
+    defaultServerTimeout: 10,
+
+    /**
      * URL to send feedback.
      */
     feedbackURL: 'mailto:se.support@digitalistgroup.com',
