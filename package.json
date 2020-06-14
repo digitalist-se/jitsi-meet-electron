@@ -30,8 +30,7 @@
       "category": "public.app-category.video",
       "darkModeSupport": true,
       "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "type": "distribution", 
+      "type": "distribution",
       "entitlements": "entitlements.mac.plist",
       "entitlementsInherit": "entitlements.mac.plist",
       "extendInfo": {
@@ -65,7 +64,6 @@
       "target": [
         {
           "arch": [
-            "ia32",
             "x64"
           ],
           "target": "nsis"
@@ -117,6 +115,7 @@
     "history": "4.10.1",
     "jitsi-meet-electron-utils": "github:jitsi/jitsi-meet-electron-utils#v2.0.7",
     "js-utils": "github:jitsi/js-utils#cf11996bd866fdb47326c59a5d3bc24be17282d4",
+    "jsonfile": "6",
     "moment": "2.23.0",
     "mousetrap": "1.6.2",
     "react": "16.6.3",
@@ -144,8 +143,8 @@
     "concurrently": "5.1.0",
     "css-loader": "3.5.0",
     "devtron": "1.4.0",
-    "electron": "9.0.0",
-    "electron-builder": "22.3.6",
+    "electron": "9.0.3",
+    "electron-builder": "22.7.0",
     "electron-notarize": "^0.3.0",
     "electron-react-devtools": "0.5.3",
     "eslint": "6.5.1",
