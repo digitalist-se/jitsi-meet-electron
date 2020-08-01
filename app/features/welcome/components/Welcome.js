@@ -8,6 +8,8 @@ import { AtlasKitThemeProvider } from '@atlaskit/theme';
 
 import { generateRoomWithoutSeparator } from 'js-utils/random';
 import React, { Component } from 'react';
+import { withTranslation } from 'react-i18next';
+import { compose } from 'redux';
 import type { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
@@ -15,10 +17,9 @@ import { push } from 'react-router-redux';
 import { Navbar } from '../../navbar';
 import { Onboarding, startOnboarding } from '../../onboarding';
 import { RecentList } from '../../recent-list';
-import { normalizeServerURL } from '../../utils';
+import { createConferenceObjectFromURL } from '../../utils';
 
 import { Body, FieldWrapper, Form, Header, Label, Wrapper } from '../styled';
-
 
 type Props = {
 
@@ -31,6 +32,11 @@ type Props = {
      * React Router location object.
      */
     location: Object;
+
+    /**
+     * I18next translate function.
+     */
+     t: Function;
 };
 
 type State = {
@@ -206,33 +212,14 @@ class Welcome extends Component<Props, State> {
      */
     _onJoin() {
         const inputURL = this.state.url || this.state.generatedRoomname;
-        const lastIndexOfSlash = inputURL.lastIndexOf('/');
-        let room;
-        let serverURL;
+        const conference = createConferenceObjectFromURL(inputURL);
 
-        if (lastIndexOfSlash === -1) {
-            // This must be only the room name.
-            room = inputURL;
-        } else {
-            // Take the substring after last slash to be the room name.
-            room = inputURL.substring(lastIndexOfSlash + 1);
-
-            // Take the substring before last slash to be the Server URL.
-            serverURL = inputURL.substring(0, lastIndexOfSlash);
-
-            // Normalize the server URL.
-            serverURL = normalizeServerURL(serverURL);
-        }
-
-        // Don't navigate if no room was specified.
-        if (!room) {
+        // Don't navigate if conference couldn't be created
+        if (!conference) {
             return;
         }
 
-        this.props.dispatch(push('/conference', {
-            room,
-            serverURL
-        }));
+        this.props.dispatch(push('/conference', conference));
     }
 
     _onURLChange: (*) => void;
@@ -271,12 +258,13 @@ class Welcome extends Component<Props, State> {
     _renderHeader() {
         const locationState = this.props.location.state;
         const locationError = locationState && locationState.error;
+        const { t } = this.props;
 
         return (
             <Header>
                 <SpotlightTarget name = 'conference-url'>
                     <Form onSubmit = { this._onFormSubmit }>
-                        <Label>{ 'Enter a name for your conference or a Jitsi URL' } </Label>
+                        <Label>{ t('enterConferenceNameOrUrl') } </Label>
                         <FieldWrapper>
                             <FieldTextStateless
                                 autoFocus = { true }
@@ -291,7 +279,7 @@ class Welcome extends Component<Props, State> {
                                 appearance = 'primary'
                                 onClick = { this._onJoin }
                                 type = 'button'>
-                                GO
+                                { t('go') }
                             </Button>
                         </FieldWrapper>
                     </Form>
@@ -325,4 +313,4 @@ class Welcome extends Component<Props, State> {
     }
 }
 
-export default connect()(Welcome);
+export default compose(connect(), withTranslation())(Welcome);

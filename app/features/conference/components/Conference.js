@@ -7,12 +7,15 @@ import type { Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import { push } from 'react-router-redux';
 
+import i18n from '../../../i18n';
 import config from '../../config';
 import { getSetting, setEmail, setName } from '../../settings';
 
 import { conferenceEnded, conferenceJoined } from '../actions';
+import JitsiMeetExternalAPI from '../external_api';
 import { LoadingIndicator, Wrapper } from '../styled';
-import { getExternalApiURL } from '../../utils';
+
+const ENABLE_REMOTE_CONTROL = false;
 
 type Props = {
 
@@ -30,11 +33,6 @@ type Props = {
      * AlwaysOnTop Window Enabled.
      */
     _alwaysOnTopWindowEnabled: boolean;
-
-    /**
-     * Avatar URL.
-     */
-    _avatarURL: string;
 
     /**
      * Email of user.
@@ -123,7 +121,6 @@ class Conference extends Component<Props, State> {
      * @returns {void}
      */
     componentDidMount() {
-        const parentNode = this._ref.current;
         const room = this.props.location.state.room;
         const serverTimeout = this.props._serverTimeout || config.defaultServerTimeout;
         const serverURL = this.props.location.state.serverURL
@@ -135,15 +132,7 @@ class Conference extends Component<Props, State> {
             serverURL
         };
 
-        const script = document.createElement('script');
-
-        script.async = true;
-        script.onload = () => this._onScriptLoad(parentNode);
-        script.onerror = (event: Event) =>
-            this._navigateToHome(event, room, serverURL);
-        script.src = getExternalApiURL(serverURL);
-
-        this._ref.current.appendChild(script);
+        this._loadConference();
 
         // Set a timer for a timeout duration, if we haven't loaded the iframe by then,
         // give up.
@@ -169,9 +158,6 @@ class Conference extends Component<Props, State> {
     componentDidUpdate(prevProps) {
         const { props } = this;
 
-        if (props._avatarURL !== prevProps._avatarURL) {
-            this._setAvatarURL(props._avatarURL);
-        }
         if (props._email !== prevProps._email) {
             this._setEmail(props._email);
         }
@@ -208,6 +194,77 @@ class Conference extends Component<Props, State> {
     }
 
     /**
+     * Load the conference by creating the iframe element in this component
+     * and attaching utils from jitsi-meet-electron-utils.
+     *
+     * @returns {void}
+     */
+    _loadConference() {
+        const url = new URL(this._conference.room, this._conference.serverURL);
+        const roomName = url.pathname.split('/').pop();
+        const host = this._conference.serverURL.replace(/https?:\/\//, '');
+        const searchParameters = Object.fromEntries(url.searchParams);
+        const locale = { lng: i18n.language };
+        const urlParameters = {
+            ...searchParameters,
+            ...locale
+        };
+
+        const configOverwrite = {
+            startWithAudioMuted: this.props._startWithAudioMuted,
+            startWithVideoMuted: this.props._startWithVideoMuted
+        };
+
+        const options = {
+            configOverwrite,
+            onload: this._onIframeLoad,
+            parentNode: this._ref.current,
+            roomName
+        };
+
+        this._api = new JitsiMeetExternalAPI(host, {
+            ...options,
+            ...urlParameters
+        });
+
+
+        this._api.on('suspendDetected', this._onVideoConferenceEnded);
+        this._api.on('readyToClose', this._onVideoConferenceEnded);
+        this._api.on('videoConferenceJoined',
+            (conferenceInfo: Object) => {
+                this.props.dispatch(conferenceJoined(this._conference));
+                this._onVideoConferenceJoined(conferenceInfo);
+            }
+        );
+
+        const { RemoteControl,
+            setupScreenSharingRender,
+            setupAlwaysOnTopRender,
+            initPopupsConfigurationRender,
+            setupWiFiStats,
+            setupPowerMonitorRender
+        } = window.jitsiNodeAPI.jitsiMeetElectronUtils;
+
+        initPopupsConfigurationRender(this._api);
+
+        const iframe = this._api.getIFrame();
+
+        setupScreenSharingRender(this._api);
+
+        if (ENABLE_REMOTE_CONTROL) {
+            new RemoteControl(iframe); // eslint-disable-line no-new
+        }
+
+        // Allow window to be on top if enabled in settings
+        if (this.props._alwaysOnTopWindowEnabled) {
+            setupAlwaysOnTopRender(this._api);
+        }
+
+        setupWiFiStats(iframe);
+        setupPowerMonitorRender(this._api);
+    }
+
+    /**
      * It renders a loading indicator, if appropriate.
      *
      * @returns {?ReactElement}
@@ -236,71 +293,6 @@ class Conference extends Component<Props, State> {
             room,
             serverURL
         }));
-    }
-
-    /**
-     * When the script is loaded create the iframe element in this component
-     * and attach utils from jitsi-meet-electron-utils.
-     *
-     * @param {Object} parentNode - Node to which iframe has to be attached.
-     * @returns {void}
-     */
-    _onScriptLoad(parentNode: Object) {
-        const JitsiMeetExternalAPI = window.JitsiMeetExternalAPI;
-        const url = new URL(this._conference.room, this._conference.serverURL);
-        const roomName = url.pathname.split('/').pop();
-        const host = this._conference.serverURL.replace(/https?:\/\//, '');
-        const searchParameters = Object.fromEntries(url.searchParams);
-        const urlParameters = Object.keys(searchParameters).length ? searchParameters : {};
-
-        const configOverwrite = {
-            startWithAudioMuted: this.props._startWithAudioMuted,
-            startWithVideoMuted: this.props._startWithVideoMuted
-        };
-
-        const options = {
-            configOverwrite,
-            onload: this._onIframeLoad,
-            parentNode,
-            roomName
-        };
-
-        this._api = new JitsiMeetExternalAPI(host, {
-            ...options,
-            ...urlParameters
-        });
-
-        const { RemoteControl,
-            setupScreenSharingRender,
-            setupAlwaysOnTopRender,
-            initPopupsConfigurationRender,
-            setupWiFiStats,
-            setupPowerMonitorRender
-        } = window.jitsiNodeAPI.jitsiMeetElectronUtils;
-
-        initPopupsConfigurationRender(this._api);
-
-        const iframe = this._api.getIFrame();
-
-        setupScreenSharingRender(this._api);
-        new RemoteControl(iframe); // eslint-disable-line no-new
-
-        // Allow window to be on top if enabled in settings
-        if (this.props._alwaysOnTopWindowEnabled) {
-            setupAlwaysOnTopRender(this._api);
-        }
-
-        setupWiFiStats(iframe);
-        setupPowerMonitorRender(this._api);
-
-        this._api.on('suspendDetected', this._onVideoConferenceEnded);
-        this._api.on('readyToClose', this._onVideoConferenceEnded);
-        this._api.on('videoConferenceJoined',
-            (conferenceInfo: Object) => {
-                this.props.dispatch(conferenceJoined(this._conference));
-                this._onVideoConferenceJoined(conferenceInfo);
-            }
-        );
     }
 
     _onVideoConferenceEnded: (*) => void;
@@ -369,7 +361,6 @@ class Conference extends Component<Props, State> {
      * @returns {void}
      */
     _onVideoConferenceJoined(conferenceInfo: Object) {
-        this._setAvatarURL(this.props._avatarURL);
         this._setEmail(this.props._email);
         this._setName(this.props._name);
 
@@ -379,16 +370,6 @@ class Conference extends Component<Props, State> {
             (params: Object) => this._onDisplayNameChange(params, id));
         this._api.on('emailChange',
             (params: Object) => this._onEmailChange(params, id));
-    }
-
-    /**
-     * Set Avatar URL from settings to conference.
-     *
-     * @param {string} avatarURL - Avatar URL.
-     * @returns {void}
-     */
-    _setAvatarURL(avatarURL: string) {
-        this._api.executeCommand('avatarUrl', avatarURL);
     }
 
     /**
@@ -421,9 +402,7 @@ class Conference extends Component<Props, State> {
  */
 function _mapStateToProps(state: Object) {
     return {
-        _alwaysOnTopWindowEnabled:
-            getSetting(state, 'alwaysOnTopWindowEnabled', true),
-        _avatarURL: state.settings.avatarURL,
+        _alwaysOnTopWindowEnabled: getSetting(state, 'alwaysOnTopWindowEnabled', true),
         _email: state.settings.email,
         _name: state.settings.name,
         _serverURL: state.settings.serverURL,

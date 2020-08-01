@@ -1,6 +1,5 @@
 // @flow
 
-import Avatar from '@atlaskit/avatar';
 import FieldText from '@atlaskit/field-text';
 import ArrowLeft from '@atlaskit/icon/glyph/arrow-left';
 import { AkCustomDrawer } from '@atlaskit/navigation';
@@ -8,18 +7,22 @@ import { SpotlightTarget } from '@atlaskit/onboarding';
 import Panel from '@atlaskit/panel';
 
 import React, { Component } from 'react';
+import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import type { Dispatch } from 'redux';
+import { compose } from 'redux';
 
 import { closeDrawer, DrawerContainer, Logo } from '../../navbar';
-import { Onboarding, startOnboarding } from '../../onboarding';
-import { AvatarContainer, SettingsContainer, TogglesContainer } from '../styled';
-import { setEmail, setName } from '../actions';
+import { Onboarding, advenaceSettingsSteps, startOnboarding } from '../../onboarding';
+import { Form, SettingsContainer, TogglesContainer } from '../styled';
+import {
+    setEmail, setName, setWindowAlwaysOnTop,
+    setStartWithAudioMuted, setStartWithVideoMuted
+} from '../actions';
 
-import AlwaysOnTopWindowToggle from './AlwaysOnTopWindowToggle';
+import SettingToggle from './SettingToggle';
 import ServerURLField from './ServerURLField';
 import ServerTimeoutField from './ServerTimeoutField';
-import StartMutedToggles from './StartMutedToggles';
 
 type Props = {
 
@@ -34,19 +37,24 @@ type Props = {
     isOpen: boolean;
 
     /**
-     * Avatar URL.
-     */
-    _avatarURL: string;
-
-    /**
      * Email of the user.
      */
     _email: string;
 
     /**
+     * Whether onboarding is active or not.
+     */
+    _isOnboardingAdvancedSettings: boolean,
+
+    /**
      * Name of the user.
      */
     _name: string;
+
+    /**
+     * I18next translation function.
+     */
+    t: Function;
 };
 
 /**
@@ -93,57 +101,69 @@ class SettingsDrawer extends Component<Props, *> {
      * @returns {ReactElement}
      */
     render() {
+        const { t } = this.props;
+
         return (
             <AkCustomDrawer
-                backIcon = { <ArrowLeft label = 'Back' /> }
+                backIcon = { <ArrowLeft label = { t('settings.back') } /> }
                 isOpen = { this.props.isOpen }
                 onBackButton = { this._onBackButton }
                 primaryIcon = { <Logo /> } >
                 <DrawerContainer>
                     <SettingsContainer>
-                        <AvatarContainer>
-                            <Avatar
-                                size = 'xlarge'
-                                src = { this.props._avatarURL } />
-                        </AvatarContainer>
                         <SpotlightTarget
                             name = 'name-setting'>
-                            <form onSubmit = { this._onNameFormSubmit }>
+                            <Form onSubmit = { this._onNameFormSubmit }>
                                 <FieldText
-                                    label = 'Name'
+                                    label = { t('settings.name') }
                                     onBlur = { this._onNameBlur }
                                     shouldFitContainer = { true }
                                     type = 'text'
                                     value = { this.props._name } />
-                            </form>
+                            </Form>
                         </SpotlightTarget>
                         <SpotlightTarget
                             name = 'email-setting'>
-                            <form onSubmit = { this._onEmailFormSubmit }>
+                            <Form onSubmit = { this._onEmailFormSubmit }>
                                 <FieldText
-                                    label = 'Email'
+                                    label = { t('settings.email') }
                                     onBlur = { this._onEmailBlur }
                                     shouldFitContainer = { true }
                                     type = 'text'
                                     value = { this.props._email } />
-                            </form>
-                        </SpotlightTarget>
-                        <SpotlightTarget
-                            name = 'server-setting'>
-                            <ServerURLField />
+                            </Form>
                         </SpotlightTarget>
                         <TogglesContainer>
                             <SpotlightTarget
                                 name = 'start-muted-toggles'>
-                                <StartMutedToggles />
-                            </SpotlightTarget>
-                            <SpotlightTarget
-                                name = 'always-on-top-window'>
-                                <AlwaysOnTopWindowToggle />
+                                <SettingToggle
+                                    label = { t('settings.startWithAudioMuted') }
+                                    settingChangeEvent = { setStartWithAudioMuted }
+                                    settingName = 'startWithAudioMuted' />
+                                <SettingToggle
+                                    label = { t('settings.startWithVideoMuted') }
+                                    settingChangeEvent = { setStartWithVideoMuted }
+                                    settingName = 'startWithVideoMuted' />
                             </SpotlightTarget>
                         </TogglesContainer>
-                        <Panel header = 'Advanced Settings'>
-                            <ServerTimeoutField />
+                        <Panel
+                            header = { t('settings.advancedSettings') }
+                            isDefaultExpanded = { this.props._isOnboardingAdvancedSettings }>
+                            <SpotlightTarget name = 'server-setting'>
+                                <ServerURLField />
+                            </SpotlightTarget>
+                            <SpotlightTarget name = 'server-timeout'>
+                                <ServerTimeoutField />
+                            </SpotlightTarget>
+                            <TogglesContainer>
+                                <SpotlightTarget
+                                    name = 'always-on-top-window'>
+                                    <SettingToggle
+                                        label = { t('settings.alwaysOnTopWindow') }
+                                        settingChangeEvent = { setWindowAlwaysOnTop }
+                                        settingName = 'alwaysOnTopWindowEnabled' />
+                                </SpotlightTarget>
+                            </TogglesContainer>
                         </Panel>
                         <Onboarding section = 'settings-drawer' />
                     </SettingsContainer>
@@ -167,7 +187,7 @@ class SettingsDrawer extends Component<Props, *> {
     _onEmailBlur: (*) => void;
 
     /**
-     * Updates Avatar URL in (redux) state when email is updated.
+     * Updates email in (redux) state when email is updated.
      *
      * @param {SyntheticInputEvent<HTMLInputElement>} event - Event by which
      * this function is called.
@@ -196,7 +216,7 @@ class SettingsDrawer extends Component<Props, *> {
     _onNameBlur: (*) => void;
 
     /**
-     * Updates Avatar URL in (redux) state when name is updated.
+     * Updates name in (redux) state when name is updated.
      *
      * @param {SyntheticInputEvent<HTMLInputElement>} event - Event by which
      * this function is called.
@@ -227,18 +247,14 @@ class SettingsDrawer extends Component<Props, *> {
  * Maps (parts of) the redux state to the React props.
  *
  * @param {Object} state - The redux state.
- * @returns {{
- *     _avatarURL: string,
- *     _email: string,
- *     _name: string
- * }}
+ * @returns {Props}
  */
 function _mapStateToProps(state: Object) {
     return {
-        _avatarURL: state.settings.avatarURL,
         _email: state.settings.email,
+        _isOnboardingAdvancedSettings: !advenaceSettingsSteps.every(i => state.onboarding.onboardingShown.includes(i)),
         _name: state.settings.name
     };
 }
 
-export default connect(_mapStateToProps)(SettingsDrawer);
+export default compose(connect(_mapStateToProps), withTranslation())(SettingsDrawer);

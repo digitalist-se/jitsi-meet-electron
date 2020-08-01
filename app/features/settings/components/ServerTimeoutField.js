@@ -3,12 +3,15 @@
 import { FieldTextStateless } from '@atlaskit/field-text';
 
 import React, { Component } from 'react';
+import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
+import { compose } from 'redux';
 import type { Dispatch } from 'redux';
 
 import config from '../../config';
 
 import { setServerTimeout } from '../actions';
+import { Form } from '../styled';
 
 type Props = {
 
@@ -21,6 +24,11 @@ type Props = {
      * Default Jitsi Meet Server Timeout in (redux) store.
      */
     _serverTimeout: number;
+
+    /**
+     * I18next translation function.
+     */
+    t: Function;
 };
 
 type State = {
@@ -63,21 +71,23 @@ class ServerTimeoutField extends Component<Props, State> {
      * @returns {ReactElement}
      */
     render() {
+        const { t } = this.props;
+
         return (
-            <form onSubmit = { this._onServerTimeoutSubmit }>
+            <Form onSubmit = { this._onServerTimeoutSubmit }>
                 <FieldTextStateless
                     invalidMessage
-                        = { 'Invalid Timeout' }
+                        = { t('settings.invalidServerTimeout') }
                     isInvalid = { !this.state.isValid }
                     isValidationHidden = { this.state.isValid }
-                    label = 'Server Timeout (in seconds)'
+                    label = { t('settings.serverTimeout') }
                     onBlur = { this._onServerTimeoutSubmit }
                     onChange = { this._onServerTimeoutChange }
                     placeholder = { config.defaultServerTimeout }
                     shouldFitContainer = { true }
                     type = 'number'
                     value = { this.state.serverTimeout } />
-            </form>
+            </Form>
         );
     }
 
@@ -137,4 +147,4 @@ function _mapStateToProps(state: Object) {
     };
 }
 
-export default connect(_mapStateToProps)(ServerTimeoutField);
+export default compose(connect(_mapStateToProps), withTranslation())(ServerTimeoutField);
