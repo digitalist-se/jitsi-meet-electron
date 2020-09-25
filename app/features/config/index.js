@@ -19,7 +19,7 @@ export default {
     * The prefix for application protocol.
     * You will also need to replace this in package.json.
     */
-    appProtocolPrefix: 'jitsi-meet',
+    appProtocolPrefix: 'digimeet',
 
     /**
      * The default server URL of Jitsi Meet Deployment that will be used.
