@@ -9,7 +9,7 @@ Desktop application for [Jitsi Meet] built with [Electron].
 - [End-to-End Encryption](https://jitsi.org/blog/e2ee/) support (BETA)
 - Works with any Jitsi Meet deployment
 - Builtin auto-updates
-- Remote control
+- ~Remote control~ (currently disabled)
 - Always-On-Top window
 - Support for deeplinks such as `jitsi-meet://myroom` (will open `myroom` on the configured Jitsi instance) or `jitsi-meet://jitsi.mycompany.com/myroom` (will open `myroom` on the Jitsi instance running on `jitsi.mycompany.com`)
 
@@ -17,7 +17,7 @@ Desktop application for [Jitsi Meet] built with [Electron].
 
 Download our latest release and you're off to the races!
 
-| Windows | macOS | GNU/Linux (64bits only) |
+| Windows | macOS | GNU/Linux (64-bit only) |
 | -- | -- | -- |
 | [Download](https://github.com/jitsi/jitsi-meet-electron/releases/latest/download/jitsi-meet.exe) | [Download](https://github.com/jitsi/jitsi-meet-electron/releases/latest/download/jitsi-meet.dmg) | [Download](https://github.com/jitsi/jitsi-meet-electron/releases/latest/download/jitsi-meet-x86_64.AppImage) |
 
@@ -30,18 +30,6 @@ brew cask install jitsi-meet
 ```
 
 ### Using it with your own Jitsi Meet installation
-
-In order to use this application with your own Jitsi Meet installation it's
-necessary to enable the External API. Your server must serve a `external_api.js`
-file at the root of the installation.
-
-Here is an example using nginx:
-
-```
-location /external_api.js {
-    alias /usr/share/jitsi-meet/libs/external_api.min.js;
-}
-```
 
 :warning: The following additional HTTP headers are known to break the Electron App:
 
