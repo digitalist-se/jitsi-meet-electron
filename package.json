@@ -1,5 +1,5 @@
 {
-  "name": "jitsi-meet-electron",
+  "name": "digi-meet-electron",
   "version": "2.4.0",
   "description": "Electron application for Jitsi Meet",
   "main": "./build/main.js",
@@ -46,6 +46,9 @@
       "category": "VideoConference;AudioVideo;Audio;Video;Network",
       "description": "Digi Meet Desktop App",
       "executableName": "digi-meet",
+      "mimeTypes": [
+        "x-scheme-handler/digimeet"
+      ],
       "target": [
         {
           "arch": "x64",
